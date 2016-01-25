@@ -99,12 +99,10 @@ int main (void)
 					fprintf(stderr, "[master] msg reveive error: %s\n", strerror(errno));
 				fprintf(stderr, "[master] recieved msg: %s\n", msg);
 				bzero(msg, msg_len);
+				/* @TODO - break loop if all of the threads have finished */
 			}
 		}
 	}
-
-	sleep(1);
-	/* ssize_t mq_receive(mqd_t mqdes, char *msg_ptr, size_t msg_len, unsigned int *msg_prio); */
 	if (mq_close(mq_fd) == -1) {
 		fprintf(stderr, "failed to close mq: %s, %s\n", mq_name, strerror(errno));
 		return 1;
@@ -114,6 +112,6 @@ int main (void)
 		return 1;
 	}
 	pthread_exit(NULL);
-	/* block until all the threads return */
+
 	return 0;
 }
