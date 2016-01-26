@@ -89,6 +89,7 @@ int main (void)
 	size_t  msg_len = attr.mq_msgsize;
 	char   *msg;
 		    msg = malloc(msg_len);
+	int num_received = 0;
 	for (;;) {
 		if ((nfds = epoll_wait(epollfd, events, MAX_EVENTS, -1)) == -1)
 			fprintf(stderr, "epoll_wait");
@@ -97,21 +98,24 @@ int main (void)
 			if (events[n].data.fd == mq_fd) {
 				if (mq_receive(mq_fd, msg, msg_len, NULL) == -1)
 					fprintf(stderr, "[master] msg reveive error: %s\n", strerror(errno));
+				num_received++;
 				fprintf(stderr, "[master] recieved msg: %s\n", msg);
 				bzero(msg, msg_len);
-				/* @TODO - break loop if all of the threads have finished */
+				if (num_received >= t) {
+					if (mq_close(mq_fd) == -1) {
+						fprintf(stderr, "failed to close mq: %s, %s\n", mq_name, strerror(errno));
+						return 1;
+					}
+					if (mq_unlink(mq_name) == -1) {
+						fprintf(stderr, "failed to unlink mq: %s, %s\n", mq_name, strerror(errno));
+						return 1;
+					}
+					pthread_exit(NULL);
+					return 0;
+				}
 			}
 		}
 	}
-	if (mq_close(mq_fd) == -1) {
-		fprintf(stderr, "failed to close mq: %s, %s\n", mq_name, strerror(errno));
-		return 1;
-	}
-	if (mq_unlink(mq_name) == -1) {
-		fprintf(stderr, "failed to unlink mq: %s, %s\n", mq_name, strerror(errno));
-		return 1;
-	}
-	pthread_exit(NULL);
 
 	return 0;
 }
