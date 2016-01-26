@@ -49,14 +49,14 @@ int main (void)
 	char *mq_name = "/test-mq";
 
 	struct mq_attr attr;
-	attr.mq_flags = O_RDWR;
-	attr.mq_maxmsg = 10;
-	attr.mq_msgsize = 1024;
+	attr.mq_flags   = O_NONBLOCK;
+	attr.mq_maxmsg  = 10; /* the default queue size on Linux */
+	attr.mq_msgsize = 32;
 	attr.mq_curmsgs = 0;
 
 	mode_t omask;
 	omask = umask(0);
-	if ((mq_fd = mq_open(mq_name, O_RDWR|O_CREAT|O_NONBLOCK, (S_IRWXU | S_IRWXG | S_IRWXO), &attr)) == -1) {
+	if ((mq_fd = mq_open(mq_name, O_RDWR|O_CREAT|O_NONBLOCK, (S_IRWXU | S_IRWXG), &attr)) == -1) {
 		fprintf(stderr, "failed to open mq: %s, %s\n", mq_name, strerror(errno));
 		return 1;
 	}

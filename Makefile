@@ -14,4 +14,4 @@ TARGET += test
 all: $(TARGET)
 
 clean:
-	rm $(TARGET)
+	rm -f $(TARGET)
