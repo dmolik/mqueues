@@ -14,14 +14,15 @@
 
 #define MAX_EVENTS 1024
 
-typedef struct data_t {
+typedef struct _data {
 	long  id;
+	int   msg_size;
 	char *mq_name;
-} data_t;
+} _data;
 
 void *thread_worker(void *data)
 {
-	data_t *d = (data_t *) data;
+	_data *d = (_data *) data;
 	fprintf(stdout, "[%ld] entered thread\n", d->id);
 	int  mq_fd;
 	if ((mq_fd = mq_open(d->mq_name, O_RDWR|O_NONBLOCK)) == -1) {
@@ -30,16 +31,19 @@ void *thread_worker(void *data)
 	}
 
 	char *msg;
-	msg = malloc(24);
-	sprintf(msg, "[%ld] test\n", d->id);
+	      msg = malloc(d->msg_size);
+	if (msg == NULL)
+		fprintf(stderr, "[%ld] failed to allocate mem for sending message\n", d->id);
+
+	snprintf(msg, d->msg_size, "[%ld] test\n", d->id);
 	if (mq_send(mq_fd, msg, strlen(msg) + 1, 1) != 0)
 		fprintf(stderr, "[%ld] failed to send message %s\n", d->id, strerror(errno));
-
+	free(msg);
 	if (mq_close(mq_fd) == -1) {
 		fprintf(stderr, "[%ld] failed to close mq: %s, %s\n", d->id, d->mq_name, strerror(errno));
 		return NULL;
 	}
-
+	free(d);
 	return NULL;
 }
 
@@ -65,10 +69,15 @@ int main (void)
 	long t;
 	pthread_t threads[4];
 	for ( t = 0; t < 4; t++ ) {
-		data_t *d;
-		d = malloc(sizeof(data_t));
-		d->id = t;
-		d->mq_name = mq_name;
+		_data *d;
+		       d = malloc(sizeof(_data));
+		if (d == NULL)
+			fprintf(stderr, "[master] failed to allocate mem for thread [%ld]\n", t);
+
+		d->id       = t;
+		d->mq_name  = mq_name;
+		d->msg_size = attr.mq_msgsize;
+
 		if (pthread_create(&threads[t], NULL, thread_worker, (void *)d) != 0) {
 			fprintf(stderr, "failed to create thread: %ld, %s", t, strerror(errno));
 			return 1;
@@ -85,23 +94,25 @@ int main (void)
 	if (epoll_ctl(epollfd, EPOLL_CTL_ADD, mq_fd, &ev) == -1)
 		fprintf(stderr, "epoll_ctl sfd");
 
-	int n = 0;
-	size_t  msg_len = attr.mq_msgsize;
-	char   *msg;
-		    msg = malloc(msg_len);
-	int num_received = 0;
+	int   n = 0;
+	int   num_received = 0;
+	char *msg;
+		  msg = malloc(attr.mq_msgsize);
+	if (msg == NULL)
+		fprintf(stderr, "[master] failed to allocate mem for receiving messages\n");
 	for (;;) {
 		if ((nfds = epoll_wait(epollfd, events, MAX_EVENTS, -1)) == -1)
 			fprintf(stderr, "epoll_wait");
 
 		for (n = 0; n < nfds; ++n) {
 			if (events[n].data.fd == mq_fd) {
-				if (mq_receive(mq_fd, msg, msg_len, NULL) == -1)
+				if (mq_receive(mq_fd, msg, attr.mq_msgsize, NULL) == -1)
 					fprintf(stderr, "[master] msg reveive error: %s\n", strerror(errno));
 				num_received++;
 				fprintf(stderr, "[master] recieved msg: %s\n", msg);
-				bzero(msg, msg_len);
+				bzero(msg, attr.mq_msgsize);
 				if (num_received >= t) {
+					free(msg);
 					if (mq_close(mq_fd) == -1) {
 						fprintf(stderr, "failed to close mq: %s, %s\n", mq_name, strerror(errno));
 						return 1;
