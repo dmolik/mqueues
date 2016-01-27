@@ -1,7 +1,7 @@
 .PHONY: clean
 .SUFFIXES: .c .o
 
-CFLAGS=-Wall -Wextra -pedantic -g -pipe
+CFLAGS=-Wall -Wextra -std=c99 -pedantic -g -pipe
 
 LIBS=-lrt -lpthread
 

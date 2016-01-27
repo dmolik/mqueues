@@ -110,7 +110,7 @@ int main (void)
 					fprintf(stderr, "[master] msg reveive error: %s\n", strerror(errno));
 				num_received++;
 				fprintf(stderr, "[master] recieved msg: %s\n", msg);
-				bzero(msg, attr.mq_msgsize);
+				memset(msg, 0, attr.mq_msgsize);
 				if (num_received >= t) {
 					free(msg);
 					if (mq_close(mq_fd) == -1) {
