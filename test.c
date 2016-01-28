@@ -92,7 +92,6 @@ int main (void)
 	if (epoll_ctl(epollfd, EPOLL_CTL_ADD, mq_fd, &ev) == -1)
 		fprintf(stderr, "epoll_ctl sfd");
 
-	int   n = 0;
 	int   num_received = 0;
 	char *msg = malloc(attr.mq_msgsize);
 	if (msg == NULL)
@@ -101,7 +100,7 @@ int main (void)
 		if ((nfds = epoll_wait(epollfd, events, MAX_EVENTS, -1)) == -1)
 			fprintf(stderr, "epoll_wait");
 
-		for (n = 0; n < nfds; ++n) {
+		for (int n = 0; n < nfds; ++n) {
 			if (events[n].data.fd == mq_fd) {
 				if (mq_receive(mq_fd, msg, attr.mq_msgsize, NULL) == -1)
 					fprintf(stderr, "[master] msg reveive error: %s\n", strerror(errno));
