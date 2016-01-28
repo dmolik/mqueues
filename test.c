@@ -24,14 +24,13 @@ void *thread_worker(void *data)
 {
 	_data *d = (_data *) data;
 	fprintf(stdout, "[%ld] entered thread\n", d->id);
-	int  mq_fd;
+	int mq_fd;
 	if ((mq_fd = mq_open(d->mq_name, O_RDWR|O_NONBLOCK)) == -1) {
 		fprintf(stderr, "[%ld] failed to open mq: %s, %s\n", d->id, d->mq_name, strerror(errno));
 		return NULL;
 	}
 
-	char *msg;
-	      msg = malloc(d->msg_size);
+	char *msg = malloc(d->msg_size);
 	if (msg == NULL)
 		fprintf(stderr, "[%ld] failed to allocate mem for sending message\n", d->id);
 
@@ -69,8 +68,7 @@ int main (void)
 	long t;
 	pthread_t threads[4];
 	for ( t = 0; t < 4; t++ ) {
-		_data *d;
-		       d = malloc(sizeof(_data));
+		_data *d = malloc(sizeof(_data));
 		if (d == NULL)
 			fprintf(stderr, "[master] failed to allocate mem for thread [%ld]\n", t);
 
@@ -96,8 +94,7 @@ int main (void)
 
 	int   n = 0;
 	int   num_received = 0;
-	char *msg;
-		  msg = malloc(attr.mq_msgsize);
+	char *msg = malloc(attr.mq_msgsize);
 	if (msg == NULL)
 		fprintf(stderr, "[master] failed to allocate mem for receiving messages\n");
 	for (;;) {
