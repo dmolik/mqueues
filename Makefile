@@ -1,7 +1,10 @@
 .PHONY: clean
 .SUFFIXES: .c .o
 
-CFLAGS=-Wall -Wextra -std=c99 -pedantic -g -pipe
+CFLAGS :=
+CFLAGS += -Wall -Wextra
+CFLAGS += -std=c99 -pedantic -g
+CLFAGS += -pipe
 
 LIBS=-lrt -lpthread
 
@@ -9,7 +12,7 @@ LIBS=-lrt -lpthread
 	$(CC) $(CFLAGS) $(LIBS) -o $@ $<
 
 TARGET :=
-TARGET += test
+TARGET += fan
 
 all: $(TARGET)
 
