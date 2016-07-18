@@ -12,6 +12,7 @@ LIBS=-lrt -lpthread
 	$(CC) $(CFLAGS) $(LIBS) -o $@ $<
 
 TARGET :=
+TARGET += spoke
 TARGET += fan
 
 all: $(TARGET)
